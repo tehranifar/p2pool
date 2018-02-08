@@ -17,8 +17,9 @@ class Protocol(p2protocol.Protocol):
         p2protocol.Protocol.__init__(self, net.P2P_PREFIX, 1000000, ignore_trailing_payload=True)
     
     def connectionMade(self):
+
         self.send_version(
-            version=70002,
+            version=90024,
             services=1,
             time=int(time.time()),
             addr_to=dict(
@@ -32,7 +33,7 @@ class Protocol(p2protocol.Protocol):
                 port=self.transport.getHost().port,
             ),
             nonce=random.randrange(2**64),
-            sub_version_num='/P2Pool:%s/' % (p2pool.__version__,),
+            sub_version_num='1024',
             start_height=0,
         )
     

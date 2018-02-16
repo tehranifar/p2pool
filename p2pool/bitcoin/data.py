@@ -86,6 +86,13 @@ class FloatingIntegerType(pack.Type):
         return self._inner.write(file, item.bits)
 
 address_type = pack.ComposedType([
+    ('time', pack.IntType(32)),
+    ('services', pack.IntType(64)),
+    ('address', pack.IPV6AddressType()),
+    ('port', pack.IntType(16, 'big')),
+])
+
+address_type_no_time = pack.ComposedType([
     ('services', pack.IntType(64)),
     ('address', pack.IPV6AddressType()),
     ('port', pack.IntType(16, 'big')),

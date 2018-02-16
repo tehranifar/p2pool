@@ -14,7 +14,7 @@ from p2pool.util import deferral, p2protocol, pack, variable
 
 class Protocol(p2protocol.Protocol):
     def __init__(self, net):
-        p2protocol.Protocol.__init__(self, net.P2P_PREFIX, 1000000, ignore_trailing_payload=True)
+        p2protocol.Protocol.__init__(self, net.P2P_PREFIX, 1000000, ignore_trailing_payload=False)
     
     def connectionMade(self):
 
@@ -23,18 +23,21 @@ class Protocol(p2protocol.Protocol):
             services=1,
             time=int(time.time()),
             addr_to=dict(
+                time=2,
                 services=1,
                 address=self.transport.getPeer().host,
                 port=self.transport.getPeer().port,
             ),
             addr_from=dict(
+                time=2,
                 services=1,
                 address=self.transport.getHost().host,
                 port=self.transport.getHost().port,
             ),
-            nonce=random.randrange(2**64),
-            sub_version_num='1024',
+            nonce=random.randrange(2 ** 64),
+            sub_version_num='/P2Pool:%s/' % (p2pool.__version__,),
             start_height=0,
+            relay=0
         )
     
     message_version = pack.ComposedType([
@@ -46,8 +49,9 @@ class Protocol(p2protocol.Protocol):
         ('nonce', pack.IntType(64)),
         ('sub_version_num', pack.VarStrType()),
         ('start_height', pack.IntType(32)),
+        ('relay', pack.IntType(8))
     ])
-    def handle_version(self, version, services, time, addr_to, addr_from, nonce, sub_version_num, start_height):
+    def handle_version(self, version, services, time, addr_to, addr_from, nonce, sub_version_num, start_height, relay):
         self.send_verack()
     
     message_verack = pack.ComposedType([])
@@ -65,7 +69,10 @@ class Protocol(p2protocol.Protocol):
     
     message_inv = pack.ComposedType([
         ('invs', pack.ListType(pack.ComposedType([
-            ('type', pack.EnumType(pack.IntType(32), {1: 'tx', 2: 'block'})),
+            ('type', pack.EnumType(pack.IntType(32),
+                                   {1: 'tx', 2: 'block', 3: 'txlock_request', 4: 'txlock_vote',
+                                    5: 'spork', 6: 'znode_payment_vote', 7: 'znode_payment_block', 8: 'znode_announce',
+                                    9: 'znode_ping', 10: 'dstx', 11: 'znode_verify'})),
             ('hash', pack.IntType(256)),
         ]))),
     ])
@@ -76,11 +83,15 @@ class Protocol(p2protocol.Protocol):
             elif inv['type'] == 'block':
                 self.factory.new_block.happened(inv['hash'])
             else:
-                print 'Unknown inv type', inv
-    
+                if p2pool.DEBUG:
+                    print 'Unneeded inv type', inv
+
     message_getdata = pack.ComposedType([
         ('requests', pack.ListType(pack.ComposedType([
-            ('type', pack.EnumType(pack.IntType(32), {1: 'tx', 2: 'block'})),
+            ('type', pack.EnumType(pack.IntType(32),
+                                   {1: 'tx', 2: 'block', 3: 'txlock_request', 4: 'txlock_vote',
+                                    5: 'spork', 6: 'znode_payment_vote', 7: 'znode_payment_block', 8: 'znode_announce',
+                                    9: 'znode_ping', 10: 'dstx', 11: 'znode_verify'})),
             ('hash', pack.IntType(256)),
         ]))),
     ])

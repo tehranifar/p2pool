@@ -134,8 +134,8 @@ class Protocol(p2protocol.Protocol):
     message_version = pack.ComposedType([
         ('version', pack.IntType(32)),
         ('services', pack.IntType(64)),
-        ('addr_to', bitcoin_data.address_type),
-        ('addr_from', bitcoin_data.address_type),
+        ('addr_to', bitcoin_data.address_type_no_time),
+        ('addr_from', bitcoin_data.address_type_no_time),
         ('nonce', pack.IntType(64)),
         ('sub_version', pack.VarStrType()),
         ('mode', pack.IntType(32)), # always 1 for legacy compatibility

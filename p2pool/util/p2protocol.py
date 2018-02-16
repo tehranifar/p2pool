@@ -39,7 +39,7 @@ class Protocol(protocol.Protocol):
                 continue
             checksum = yield 4
             payload = yield length
-            
+
             if hashlib.sha256(hashlib.sha256(payload).digest()).digest()[:4] != checksum:
                 print 'invalid hash for', self.transport.getPeer().host, repr(command), length, checksum.encode('hex')
                 if p2pool.DEBUG:
@@ -55,8 +55,12 @@ class Protocol(protocol.Protocol):
             
             try:
                 self.packetReceived(command, type_.unpack(payload, self.ignore_trailing_payload))
+                # navid
+                print 'RECV', command, payload.encode('hex')
             except:
-                print 'RECV', command, payload[:100].encode('hex') + ('...' if len(payload) > 100 else '')
+                # print 'RECV', command, payload[:100].encode('hex') + ('...' if len(payload) > 100 else '')
+                # navid
+                print 'RECV', command, payload.encode('hex')
                 log.err(None, 'Error handling message: (see RECV line)')
                 self.disconnect()
     
@@ -87,11 +91,12 @@ class Protocol(protocol.Protocol):
         type_ = getattr(self, 'message_' + command, None)
         if type_ is None:
             raise ValueError('invalid command')
-        #print 'SEND', command, repr(payload2)[:500]
         payload = type_.pack(payload2)
         if len(payload) > self._max_payload_length:
             raise TooLong('payload too long')
         data = self._message_prefix + struct.pack('<12sI', command, len(payload)) + hashlib.sha256(hashlib.sha256(payload).digest()).digest()[:4] + payload
+        # navid
+        print 'SEND', command, data.encode('hex')
         self.traffic_happened.happened('p2p/out', len(data))
         self.transport.write(data)
     

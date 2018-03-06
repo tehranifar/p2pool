@@ -72,22 +72,21 @@ static inline uint64_t rotr64( const uint64_t w, const unsigned c ){
     G(r,6,v[ 2],v[ 7],v[ 8],v[13]); \
     G(r,7,v[ 3],v[ 4],v[ 9],v[14]);
 
-
 //---- Housekeeping
-void initState(uint64_t state[/*16*/]);
+extern void initState(uint64_t state[/*16*/]);
 
 //---- Squeezes
-void squeeze(uint64_t *state, unsigned char *out, unsigned int len);
-void reducedSqueezeRow0(uint64_t* state, uint64_t* row, uint64_t nCols);
+extern void squeeze(uint64_t *state, unsigned char *out, unsigned int len);
+extern void reducedSqueezeRow0(uint64_t* state, uint64_t* row, uint64_t nCols);
 
 //---- Absorbs
-void absorbBlock(uint64_t *state, const uint64_t *in);
-void absorbBlockBlake2Safe(uint64_t *state, const uint64_t *in);
+extern void absorbBlock(uint64_t *state, const uint64_t *in);
+extern void absorbBlockBlake2Safe(uint64_t *state, const uint64_t *in);
 
 //---- Duplexes
-void reducedDuplexRow1(uint64_t *state, uint64_t *rowIn, uint64_t *rowOut, uint64_t nCols);
-void reducedDuplexRowSetup(uint64_t *state, uint64_t *rowIn, uint64_t *rowInOut, uint64_t *rowOut, uint64_t nCols);
-void reducedDuplexRow(uint64_t *state, uint64_t *rowIn, uint64_t *rowInOut, uint64_t *rowOut, uint64_t nCols);
+extern void reducedDuplexRow1(uint64_t *state, uint64_t *rowIn, uint64_t *rowOut, uint64_t nCols);
+extern void reducedDuplexRowSetup(uint64_t *state, uint64_t *rowIn, uint64_t *rowInOut, uint64_t *rowOut, uint64_t nCols);
+extern void reducedDuplexRow(uint64_t *state, uint64_t *rowIn, uint64_t *rowInOut, uint64_t *rowOut, uint64_t nCols);
 
 //---- Misc
 void printArray(unsigned char *array, unsigned int size, char *name);

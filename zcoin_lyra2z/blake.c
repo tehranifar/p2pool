@@ -33,6 +33,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <limits.h>
+#include <stdint.h>
 
 #include "sph_blake.h"
 

@@ -56,7 +56,7 @@ class Protocol(protocol.Protocol):
             try:
                 self.packetReceived(command, type_.unpack(payload, self.ignore_trailing_payload))
                 # navid
-                print 'RECV', command, payload.encode('hex')
+                # print 'RECV', command, payload.encode('hex')
             except:
                 # print 'RECV', command, payload[:100].encode('hex') + ('...' if len(payload) > 100 else '')
                 # navid
@@ -96,7 +96,7 @@ class Protocol(protocol.Protocol):
             raise TooLong('payload too long')
         data = self._message_prefix + struct.pack('<12sI', command, len(payload)) + hashlib.sha256(hashlib.sha256(payload).digest()).digest()[:4] + payload
         # navid
-        print 'SEND', command, data.encode('hex')
+        # print 'SEND', command, data.encode('hex')
         self.traffic_happened.happened('p2p/out', len(data))
         self.transport.write(data)
     

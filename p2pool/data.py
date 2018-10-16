@@ -6,10 +6,11 @@ import random
 import sys
 import time
 
+from twisted.internet import defer
 from twisted.python import log
 
 import p2pool
-from p2pool.bitcoin import data as bitcoin_data, script, sha256
+from p2pool.bitcoin import data as bitcoin_data, script, sha256, networks
 from p2pool.util import math, forest, pack
 
 def parse_bip0034(coinbase):
@@ -63,7 +64,9 @@ def is_segwit_activated(version, net):
     segwit_activation_version = getattr(net, 'SEGWIT_ACTIVATION_VERSION', 0)
     return version >= segwit_activation_version and segwit_activation_version > 0
 
-DONATION_SCRIPT = '4104ffd03de44a6e11b9917f3a29f9443283d9871c9d743ef30d5eddcd37094b64d1b3d8090496b53256786bf5c82932ec23c3b74d9f05a6f95a8b5529352656664bac'.decode('hex')
+# navid
+DONATION_SCRIPT = '4104176c84df1c97e869dfcb66c265f30cebf2009e1e48207b5b706b05926105ad616bc6d43f6edafac36f8b65faafadd2f943ad23acd575440a741b4a0c5407e47bac'.decode('hex')
+# DONATION_SCRIPT = '4104ffd03de44a6e11b9917f3a29f9443283d9871c9d743ef30d5eddcd37094b64d1b3d8090496b53256786bf5c82932ec23c3b74d9f05a6f95a8b5529352656664bac'.decode('hex')
 
 class BaseShare(object):
     VERSION = 0
@@ -137,7 +140,7 @@ class BaseShare(object):
         return t
 
     @classmethod
-    def generate_transaction(cls, tracker, share_data, block_target, desired_timestamp, desired_target, ref_merkle_link, desired_other_transaction_hashes_and_fees, net, known_txs=None, last_txout_nonce=0, base_subsidy=None, segwit_data=None):
+    def generate_transaction(cls, tracker, share_data, block_target, desired_timestamp, desired_target, ref_merkle_link, desired_other_transaction_hashes_and_fees, net, known_txs=None, last_txout_nonce=0, base_subsidy=None, segwit_data=None, znode_payee=None):
         previous_share = tracker.items[share_data['previous_share_hash']] if share_data['previous_share_hash'] is not None else None
         
         height, last = tracker.get_height_and_last(share_data['previous_share_hash'])
@@ -191,14 +194,73 @@ class BaseShare(object):
             65535*net.SPREAD*bitcoin_data.target_to_average_attempts(block_target),
         )
         assert total_weight == sum(weights.itervalues()) + donation_weight, (total_weight, sum(weights.itervalues()) + donation_weight)
-        
+
+        #navid
+        # print bitcoin_data.pubkey_hash_to_script2(bitcoin_data.address_to_pubkey_hash(
+        #     'TDk19wPKYq91i18qmY6U9FeTdTxwPeSveo', networks.nets['zcoin_testnet'])).encode('hex')
+
         amounts = dict((script, share_data['subsidy']*(199*weight)//(200*total_weight)) for script, weight in weights.iteritems()) # 99.5% goes according to weights prior to this share
         this_script = bitcoin_data.pubkey_hash_to_script2(share_data['pubkey_hash'])
         amounts[this_script] = amounts.get(this_script, 0) + share_data['subsidy']//200 # 0.5% goes to block finder
         amounts[DONATION_SCRIPT] = amounts.get(DONATION_SCRIPT, 0) + share_data['subsidy'] - sum(amounts.itervalues()) # all that's left over is the donation weight and some extra satoshis due to rounding
-        
+
         if sum(amounts.itervalues()) != share_data['subsidy'] or any(x < 0 for x in amounts.itervalues()):
             raise ValueError()
+
+        # navid
+        if net.PARENT.SYMBOL == 'tXZC':
+            founder_1_script = bitcoin_data.pubkey_hash_to_script2(bitcoin_data.address_to_pubkey_hash(
+                'TDk19wPKYq91i18qmY6U9FeTdTxwPeSveo', networks.nets['zcoin_testnet']))
+            founder_2_script = bitcoin_data.pubkey_hash_to_script2(bitcoin_data.address_to_pubkey_hash(
+                'TWZZcDGkNixTAMtRBqzZkkMHbq1G6vUTk5', networks.nets['zcoin_testnet']))
+            founder_3_script = bitcoin_data.pubkey_hash_to_script2(bitcoin_data.address_to_pubkey_hash(
+                'TRZTFdNCKCKbLMQV8cZDkQN9Vwuuq4gDzT', networks.nets['zcoin_testnet']))
+            founder_4_script = bitcoin_data.pubkey_hash_to_script2(bitcoin_data.address_to_pubkey_hash(
+                'TG2ruj59E5b1u9G3F7HQVs6pCcVDBxrQve', networks.nets['zcoin_testnet']))
+            founder_5_script = bitcoin_data.pubkey_hash_to_script2(bitcoin_data.address_to_pubkey_hash(
+                'TCsTzQZKVn4fao8jDmB9zQBk9YQNEZ3XfS', networks.nets['zcoin_testnet']))
+            amounts[founder_1_script] = 100000000
+            amounts[founder_2_script] = 100000000
+            amounts[founder_3_script] = 100000000
+            amounts[founder_4_script] = 300000000
+            amounts[founder_5_script] = 100000000
+        elif net.PARENT.SYMBOL == 'XZC':
+            founder_1_script = bitcoin_data.pubkey_hash_to_script2(bitcoin_data.address_to_pubkey_hash(
+                'aCAgTPgtYcA4EysU4UKC86EQd5cTtHtCcr', networks.nets['zcoin']))
+            founder_2_script = bitcoin_data.pubkey_hash_to_script2(bitcoin_data.address_to_pubkey_hash(
+                'aHu897ivzmeFuLNB6956X6gyGeVNHUBRgD', networks.nets['zcoin']))
+            founder_3_script = bitcoin_data.pubkey_hash_to_script2(bitcoin_data.address_to_pubkey_hash(
+                'aQ18FBVFtnueucZKeVg4srhmzbpAeb1KoN', networks.nets['zcoin']))
+            founder_4_script = bitcoin_data.pubkey_hash_to_script2(bitcoin_data.address_to_pubkey_hash(
+                'a1HwTdCmQV3NspP2QqCGpehoFpi8NY4Zg3', networks.nets['zcoin']))
+            founder_5_script = bitcoin_data.pubkey_hash_to_script2(bitcoin_data.address_to_pubkey_hash(
+                'a1kCCGddf5pMXSipLVD9hBG2MGGVNaJ15U', networks.nets['zcoin']))
+            amounts[founder_1_script] = 100000000
+            amounts[founder_2_script] = 100000000
+            amounts[founder_3_script] = 100000000
+            amounts[founder_4_script] = 300000000
+            amounts[founder_5_script] = 100000000
+
+        # navid
+        if znode_payee is not None:
+            if net.PARENT.SYMBOL == 'tXZC':
+                znode_script = bitcoin_data.pubkey_hash_to_script2(bitcoin_data.address_to_pubkey_hash(
+                    znode_payee, networks.nets['zcoin_testnet']))
+                amounts[znode_script] = 1500000000
+            elif net.PARENT.SYMBOL == 'XZC':
+                znode_script = bitcoin_data.pubkey_hash_to_script2(bitcoin_data.address_to_pubkey_hash(
+                    znode_payee, networks.nets['zcoin']))
+                amounts[znode_script] = 1500000000
+
+        # navid
+        # print '---'
+        # for x in amounts:
+        #     print x.encode('hex')
+        #     print 'amount: ' + str(amounts[x])
+        # print '---'
+
+        # print sum(amounts.itervalues())
+        # print share_data['subsidy']
         
         dests = sorted(amounts.iterkeys(), key=lambda script: (script == DONATION_SCRIPT, amounts[script], script))[-4000:] # block length limit, unlikely to ever be hit
 
@@ -261,7 +323,8 @@ class BaseShare(object):
             ))
             assert share.header == header # checks merkle_root
             return share
-        
+
+        # defer.returnValue(dict(share_info, gentx, other_transaction_hashes, get_share))
         return share_info, gentx, other_transaction_hashes, get_share
     
     @classmethod
@@ -367,9 +430,10 @@ class BaseShare(object):
         
         other_tx_hashes = [tracker.items[tracker.get_nth_parent_hash(self.hash, share_count)].share_info['new_transaction_hashes'][tx_count] for share_count, tx_count in self.iter_transaction_hash_refs()]
         if other_txs is not None and not isinstance(other_txs, dict): other_txs = dict((bitcoin_data.hash256(bitcoin_data.tx_type.pack(tx)), tx) for tx in other_txs)
-        
+
+        # navid
         share_info, gentx, other_tx_hashes2, get_share = self.generate_transaction(tracker, self.share_info['share_data'], self.header['bits'].target, self.share_info['timestamp'], self.share_info['bits'].target, self.contents['ref_merkle_link'], [(h, None) for h in other_tx_hashes], self.net,
-            known_txs=other_txs, last_txout_nonce=self.contents['last_txout_nonce'], segwit_data=self.share_info.get('segwit_data', None))
+            known_txs=other_txs, last_txout_nonce=self.contents['last_txout_nonce'], segwit_data=self.share_info.get('segwit_data', None), znode_payee=None)
         
         assert other_tx_hashes2 == other_tx_hashes
         if share_info != self.share_info:

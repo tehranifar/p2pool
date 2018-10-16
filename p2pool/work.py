@@ -1,5 +1,4 @@
 from __future__ import division
-from collections import deque
 
 import base64
 import random
@@ -10,10 +9,11 @@ import time
 from twisted.internet import defer
 from twisted.python import log
 
-import bitcoin.getwork as bitcoin_getwork, bitcoin.data as bitcoin_data
+import bitcoin.data as bitcoin_data
+import p2pool
+import p2pool.data as p2pool_data
 from bitcoin import helper, script, worker_interface
 from util import forest, jsonrpc, variable, deferral, math, pack
-import p2pool, p2pool.data as p2pool_data
 
 print_throttle = 0.0
 
@@ -114,7 +114,7 @@ class WorkerBridge(worker_interface.WorkerBridge):
                     subsidy=self.node.net.PARENT.SUBSIDY_FUNC(self.node.bitcoind_work.value['height']),
                     last_update=self.node.bitcoind_work.value['last_update'],
                 )
-            
+
             self.current_work.set(t)
         self.node.bitcoind_work.changed.watch(lambda _: compute_work())
         self.node.best_block_header.changed.watch(lambda _: compute_work())
@@ -236,7 +236,7 @@ class WorkerBridge(worker_interface.WorkerBridge):
         for datum in datums:
             addr_hash_rates[datum['pubkey_hash']] = addr_hash_rates.get(datum['pubkey_hash'], 0) + datum['work']/dt
         return addr_hash_rates
- 
+
     def get_work(self, pubkey_hash, desired_share_target, desired_pseudoshare_target):
         global print_throttle
         if (self.node.p2p_node is None or len(self.node.p2p_node.peers) == 0) and self.node.net.PERSIST:
@@ -301,7 +301,7 @@ class WorkerBridge(worker_interface.WorkerBridge):
                     desired_share_target = min(desired_share_target,
                         bitcoin_data.average_attempts_to_target((bitcoin_data.target_to_average_attempts(self.node.bitcoind_work.value['bits'].target)*self.node.net.SPREAD)*self.node.net.PARENT.DUST_THRESHOLD/block_subsidy)
                     )
-        
+
         if True:
             share_info, gentx, other_transaction_hashes, get_share = share_type.generate_transaction(
                 tracker=self.node.tracker,
@@ -330,13 +330,15 @@ class WorkerBridge(worker_interface.WorkerBridge):
                 net=self.node.net,
                 known_txs=tx_map,
                 base_subsidy=self.node.net.PARENT.SUBSIDY_FUNC(self.current_work.value['height']),
+                # navid
+                znode_payee=self.current_work.value['znode_payee']
             )
         
         packed_gentx = bitcoin_data.tx_id_type.pack(gentx) # stratum miners work with stripped transactions
         other_transactions = [tx_map[tx_hash] for tx_hash in other_transaction_hashes]
         
         mm_later = [(dict(aux_work, target=aux_work['target'] if aux_work['target'] != 'p2pool' else share_info['bits'].target), index, hashes) for aux_work, index, hashes in mm_later]
-        
+
         if desired_pseudoshare_target is None:
             target = 2**256-1
             local_hash_rate = self._estimate_local_hash_rate()
@@ -348,12 +350,15 @@ class WorkerBridge(worker_interface.WorkerBridge):
         target = max(target, share_info['bits'].target)
         for aux_work, index, hashes in mm_later:
             target = max(target, aux_work['target'])
+        # print target
+        # print self.node.net.PARENT.SANE_TARGET_RANGE
         target = math.clip(target, self.node.net.PARENT.SANE_TARGET_RANGE)
-        
+        # print target
+
         getwork_time = time.time()
         lp_count = self.new_work_event.times
         merkle_link = bitcoin_data.calculate_merkle_link([None] + other_transaction_hashes, 0) if share_info.get('segwit_data', None) is None else share_info['segwit_data']['txid_merkle_link']
-        
+
         if print_throttle is 0.0:
             print_throttle = time.time()
         else:
@@ -369,7 +374,7 @@ class WorkerBridge(worker_interface.WorkerBridge):
 
         #need this for stats
         self.last_work_shares.value[bitcoin_data.pubkey_hash_to_address(pubkey_hash, self.node.net.PARENT)]=share_info['bits']
-        
+
         ba = dict(
             version=max(self.current_work.value['version'], 0x20000000),
             previous_block=self.current_work.value['previous_block'],
@@ -394,6 +399,7 @@ class WorkerBridge(worker_interface.WorkerBridge):
             
             header_hash = bitcoin_data.hash256(bitcoin_data.block_header_type.pack(header))
             pow_hash = self.node.net.PARENT.POW_FUNC(bitcoin_data.block_header_type.pack(header))
+
             try:
                 if pow_hash <= header['bits'].target or p2pool.DEBUG:
                     helper.submit_block(dict(header=header, txs=[new_gentx] + other_transactions), False, self.node.factory, self.node.bitcoind, self.node.bitcoind_work, self.node.net)
@@ -437,7 +443,7 @@ class WorkerBridge(worker_interface.WorkerBridge):
                             log.err(err, 'Error submitting merged block:')
                 except:
                     log.err(None, 'Error while processing merged mining POW:')
-            
+
             if pow_hash <= share_info['bits'].target and header_hash not in received_header_hashes:
                 last_txout_nonce = pack.IntType(8*self.COINBASE_NONCE_LENGTH).unpack(coinbase_nonce)
                 share = get_share(header, last_txout_nonce)
@@ -463,7 +469,8 @@ class WorkerBridge(worker_interface.WorkerBridge):
                     log.err(None, 'Error forwarding block solution:')
                 
                 self.share_received.happened(bitcoin_data.target_to_average_attempts(share.target), not on_time, share.hash)
-            
+
+
             if pow_hash > target:
                 print 'Worker %s submitted share with hash > target:' % (user,)
                 print '    Hash:   %56x' % (pow_hash,)

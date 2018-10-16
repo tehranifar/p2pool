@@ -60,6 +60,14 @@ def getwork(bitcoind, use_getblocktemplate=False):
         work['height'] = (yield bitcoind.rpc_getblock(work['previousblockhash']))['height'] + 1
     elif p2pool.DEBUG:
         assert work['height'] == (yield bitcoind.rpc_getblock(work['previousblockhash']))['height'] + 1
+    # navid
+    znode_reward_struct = yield deferral.retry('Error getting znode reward info:', 5)(
+                lambda: bitcoind.rpc_znode('current'))()
+    znode_reward = None
+    if type(znode_reward_struct) is dict:
+        znode_reward = znode_reward['payee']
+    else:
+        print 'Could not fetch znode reward information from wallet !'
     defer.returnValue(dict(
         version=work['version'],
         previous_block=int(work['previousblockhash'], 16),
@@ -75,6 +83,8 @@ def getwork(bitcoind, use_getblocktemplate=False):
         last_update=time.time(),
         use_getblocktemplate=use_getblocktemplate,
         latency=end - start,
+        # navid
+        znode_payee=znode_reward
     ))
 
 @deferral.retry('Error submitting primary block: (will retry)', 10, 10)

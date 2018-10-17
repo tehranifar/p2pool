@@ -117,12 +117,13 @@ class Protocol(p2protocol.Protocol):
                 # Advertise given external IP address, just as if there were another peer behind us, with that address, who asked us to advertise it for them
                 self.send_addrs(addrs=[
                     dict(
+                        # navid
                         address=dict(
+                            timestamp=int(time.time()),
                             services=self.other_services,
                             address=host,
                             port=port,
                         ),
-                        timestamp=int(time.time()),
                     ),
                 ])
             else:
@@ -250,7 +251,8 @@ class Protocol(p2protocol.Protocol):
     
     message_addrs = pack.ComposedType([
         ('addrs', pack.ListType(pack.ComposedType([
-            ('timestamp', pack.IntType(64)),
+            # navid
+            # ('timestamp', pack.IntType(64)),
             ('address', bitcoin_data.address_type),
         ]))),
     ])
@@ -267,9 +269,10 @@ class Protocol(p2protocol.Protocol):
         if count > 100:
             count = 100
         self.send_addrs(addrs=[
+            # navid
             dict(
-                timestamp=int(self.node.addr_store[host, port][2]),
                 address=dict(
+                    timestamp=int(self.node.addr_store[host, port][2]),
                     services=self.node.addr_store[host, port][0],
                     address=host,
                     port=port,

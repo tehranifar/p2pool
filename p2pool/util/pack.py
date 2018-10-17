@@ -297,6 +297,9 @@ class ComposedType(Type):
         return item, file
     
     def write(self, file, item):
+        # navid
+        # print ', '.join(self.field_names)
+        # print ', '.join(set(item.keys()))
         assert set(item.keys()) >= self.field_names
         for key, type_ in self.fields:
             file = type_.write(file, item[key])

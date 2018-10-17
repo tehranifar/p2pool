@@ -241,7 +241,7 @@ class Protocol(p2protocol.Protocol):
                     dict(
                         # navid
                         address=dict(
-                            timestamp=int(time.time()),
+                            time=int(time.time()),
                             services=self.other_services,
                             address=host,
                             port=port,

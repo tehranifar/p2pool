@@ -109,7 +109,8 @@ class Protocol(p2protocol.Protocol):
     
     message_addr = pack.ComposedType([
         ('addrs', pack.ListType(pack.ComposedType([
-            ('timestamp', pack.IntType(32)),
+            # navid
+            # ('timestamp', pack.IntType(32)),
             ('address', bitcoin_data.address_type),
         ]))),
     ])

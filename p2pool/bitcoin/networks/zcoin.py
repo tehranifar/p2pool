@@ -3,9 +3,7 @@ import platform
 
 from twisted.internet import defer
 
-from .. import data, helper
 from p2pool.util import pack
-
 
 P2P_PREFIX = 'e3d9fef1'.decode('hex')
 P2P_PORT = 8168

@@ -238,12 +238,13 @@ class Protocol(p2protocol.Protocol):
             if random.random() < .8 and self.node.peers:
                 random.choice(self.node.peers.values()).send_addrs(addrs=[
                     dict(
+                        # navid
                         address=dict(
+                            timestamp=int(time.time()),
                             services=self.other_services,
                             address=host,
                             port=port,
                         ),
-                        timestamp=int(time.time()),
                     ),
                 ])
     

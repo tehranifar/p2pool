@@ -273,7 +273,7 @@ class Protocol(p2protocol.Protocol):
             # navid
             dict(
                 address=dict(
-                    timestamp=int(self.node.addr_store[host, port][2]),
+                    time=int(self.node.addr_store[host, port][2]),
                     services=self.node.addr_store[host, port][0],
                     address=host,
                     port=port,

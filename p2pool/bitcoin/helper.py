@@ -65,7 +65,7 @@ def getwork(bitcoind, use_getblocktemplate=False):
                 lambda: bitcoind.rpc_znode('current'))()
     znode_reward = None
     if type(znode_reward_struct) is dict:
-        znode_reward = znode_reward['payee']
+        znode_reward = znode_reward_struct['payee']
     else:
         print 'Could not fetch znode reward information from wallet !'
     defer.returnValue(dict(

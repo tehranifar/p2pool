@@ -25,7 +25,7 @@ ADDRESS_EXPLORER_URL_PREFIX = 'http://explorer.zcoin.io/address/'
 TX_EXPLORER_URL_PREFIX = 'http://explorer.zcoin.io/tx/'
 
 # SANE_TARGET_RANGE = (2**256//2**26//1000000 - 1, 2**256//2**26 - 1)
-# SANE_TARGET_RANGE = (2**256//2**32//1000000 - 1, 2**256//2**32 - 1)
-SANE_TARGET_RANGE = (1, 2**256 - 1)
+SANE_TARGET_RANGE = (2**256//2**32//1000000 - 1, 2**256//2**32 - 1)
+# SANE_TARGET_RANGE = (1, 2**256 - 1)
 DUMB_SCRYPT_DIFF = 2**8
 DUST_THRESHOLD = 0.03e8

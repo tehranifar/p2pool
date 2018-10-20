@@ -15,7 +15,7 @@ MAX_TARGET = 2**256//2**20 - 1
 PERSIST = True
 
 WORKER_PORT = 9327
-BOOTSTRAP_ADDRS = '149.28.132.209'.split(' ')
+BOOTSTRAP_ADDRS = '149.28.132.209 199.247.23.133'.split(' ')
 ANNOUNCE_CHANNEL = '#p2pool-xzc-testnet'
 VERSION_CHECK = lambda v: None if 100400 <= v else 'Zcoin version too old. Upgrade to 0.13.4.2 or newer!'
 VERSION_WARNING = lambda v: None

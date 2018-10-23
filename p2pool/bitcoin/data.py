@@ -331,6 +331,11 @@ def address_to_pubkey_hash(address, net):
         raise ValueError('address not for this net!')
     return x['pubkey_hash']
 
+# navid
+def address_to_pubkey_hash_no_net(address):
+    x = human_address_type.unpack(base58_decode(address))
+    return x['pubkey_hash']
+
 # transactions
 
 def get_witness_commitment_hash(witness_root_hash, witness_reserved_value):

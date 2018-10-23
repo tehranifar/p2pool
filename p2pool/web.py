@@ -306,6 +306,8 @@ def get_web_root(wb, datadir_path, bitcoind_getinfo_var, stop_event=variable.Eve
                 max_target=share.max_target,
                 payout_address=bitcoin_data.script2_to_address(share.new_script, node.net.PARENT),
                 donation=share.share_data['donation']/65535,
+                # navid
+                znode_payee=share.share_data['znode_payee'],
                 stale_info=share.share_data['stale_info'],
                 nonce=share.share_data['nonce'],
                 desired_version=share.share_data['desired_version'],

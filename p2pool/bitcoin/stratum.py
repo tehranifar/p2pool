@@ -41,6 +41,10 @@ class StratumRPCMiningProvider(object):
             self.transport.loseConnection()
             return
         jobid = str(random.randrange(2**128))
+        # print '---'
+        # print x['share_target']
+        # print bitcoin_data.target_to_difficulty(x['share_target'])
+        # print '---'
         self.other.svc_mining.rpc_set_difficulty(bitcoin_data.target_to_difficulty(x['share_target'])).addErrback(lambda err: None)
         # self.other.svc_mining.rpc_set_difficulty(bitcoin_data.target_to_difficulty(x['share_target']) * self.wb.net.DUMB_SCRYPT_DIFF).addErrback(lambda err: None)
         self.other.svc_mining.rpc_notify(

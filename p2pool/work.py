@@ -315,12 +315,14 @@ class WorkerBridge(worker_interface.WorkerBridge):
                     pubkey_hash=pubkey_hash,
                     subsidy=self.current_work.value['subsidy'],
                     donation=math.perfect_round(65535*self.donation_percentage/100),
+                    # navid
+                    znode_payee=self.current_work.value['znode_payee'],
                     stale_info=(lambda (orphans, doas), total, (orphans_recorded_in_chain, doas_recorded_in_chain):
                         'orphan' if orphans > orphans_recorded_in_chain else
                         'doa' if doas > doas_recorded_in_chain else
                         None
                     )(*self.get_stale_counts()),
-                    desired_version=(share_type.SUCCESSOR if share_type.SUCCESSOR is not None else share_type).VOTING_VERSION,
+                    desired_version=(share_type.SUCCESSOR if share_type.SUCCESSOR is not None else share_type).VOTING_VERSION
                 ),
                 block_target=self.current_work.value['bits'].target,
                 desired_timestamp=int(time.time() + 0.5),
@@ -330,8 +332,6 @@ class WorkerBridge(worker_interface.WorkerBridge):
                 net=self.node.net,
                 known_txs=tx_map,
                 base_subsidy=self.node.net.PARENT.SUBSIDY_FUNC(self.current_work.value['height']),
-                # navid
-                znode_payee=self.current_work.value['znode_payee']
             )
         
         packed_gentx = bitcoin_data.tx_id_type.pack(gentx) # stratum miners work with stripped transactions

@@ -16,6 +16,7 @@ PERSIST = True
 
 WORKER_PORT = 9327
 BOOTSTRAP_ADDRS = '45.77.158.170 45.77.40.8'.split(' ')
+# BOOTSTRAP_ADDRS = ''.split(' ')
 ANNOUNCE_CHANNEL = '#p2pool-xzc'
 VERSION_CHECK = lambda v: None if 100400 <= v else 'Zcoin version too old. Upgrade to 0.13.4.2 or newer!'
 VERSION_WARNING = lambda v: None
